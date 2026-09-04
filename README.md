@@ -1,48 +1,51 @@
-# RaceDay — Part 1: System Planning and Design
+# RaceDay — Part 1: System Planning and Database
 
-Student: ST10488360
-
+**Student:** ST10488360
+**Module:** PROG6212
 
 ## What this project is
 
-RaceDay is a system I'm building for South African road running, walking, and cycling events, so organisers can manage events online instead of using spreadsheets and paper forms. There are two types of users — Organisers, who create events, set up categories, and capture results, and Participants, who browse events, enter them, and check their own results afterwards.
+RaceDay is a system for managing running, walking, and cycling events. Organisers can create events, set up categories, and capture results. Participants can browse events, enter them, and check their own results afterwards. This repo covers Part 1 only — planning the system before any application code is written.
 
-Part 1 is just the planning stage — no application code is written here. This part covers the database design (ERD), the SQL script that creates and seeds the database, and a full plan of every API endpoint the system will need once I start building it in Part 2.
-
-## Roles
-
-- **Organiser** — creates, edits, and deletes events, manages categories for their events, captures participant results, and can view all enrolments for their events.
-- **Participant** — registers an account, browses events, enrols in an event by picking a category, and can view their own enrolments and results.
-
-## Repository Structure
+## Repository structure
 
 ```
 /docs
-  RaceDay_ERD.png                     -> Entity Relationship Diagram
-  RaceDay_Database.sql                -> Full SQL schema and seed data
-  RaceDay_API_Endpoint_Plan.md        -> Full API endpoint plan
-  RaceDay_Part1_Planning_and_Design.docx -> Explanation of my design decisions
-
+  RaceDay_ERD.png
+  RaceDay_Database.sql
+  RaceDay_API_Endpoint_Plan.md
+  RaceDay_Part1_Planning_and_Design.docx
+  ci-success-screenshot.png
+.github/workflows/validate-part1.yml
+README.md
 ```
 
-## Database Design
+## Roles
 
-My database has 7 tables: Users, Participants, Organiser, Events, Categories, EventEnrollment, and Results.
+- **Organiser** — creates, edits, and deletes events, manages categories, captures results, and views all enrolments for their events.
+- **Participant** — registers, browses events, enters an event by picking a category, and views their own enrolments and results.
 
-I split login and profile info into separate tables instead of one big Users table with everything in it. Users only holds the login stuff — username, password hash, and role. Then Participants and Organiser each hold the profile details for their own role (name, email, phone), linked back to Users with a one-to-one foreign key. This way my login logic only ever checks one table, and once I know someone's role, I know exactly which second table to look in for the rest of their info.
+## Database design
 
-Route details (start point, end point, map URL) are stored directly on the Events table instead of a separate table, since every event only has one route. EventEnrollment is its own table because enrolling links three things together at once — the participant, the event, and the category they picked. Results link to an enrolment rather than straight to a participant, so if someone enters more than one event, each result is still tied to the right race.
+The database has 7 tables: Users, Participants, Organiser, Events, Categories, EventEnrollment, and Results.
 
-Full reasoning for every design decision is in `RaceDay_Part1_Planning_and_Design.docx` in /docs.
+Users holds login details only — username, password hash, and role. Participants and Organiser each hold the profile details for their role (name, email, phone), linked back to Users by a one-to-one foreign key. I split it this way because Organisers and Participants don't share much beyond logging in, so keeping login separate from profile data made more sense than one big table with unused columns.
 
-## How to Run My SQL Script
+Route details (start point, end point, map URL) are stored directly on the Events table instead of a separate table, since one event only ever has one route.
 
-1. Open SQL Server Management Studio (SSMS) and connect to a SQL Server instance.
-2. Open `docs/RaceDay_Database.sql`.
-3. Run the whole script (F5) — don't run only part of it, since the earlier statements set up the database and drop old tables first.
-4. It will create the RaceDay database, create all 7 tables with their keys and constraints, and insert sample data: 2 Organisers, 2 Participants, 3 Events, categories for each event, and a few enrolments and results.
-5. Check the Messages tab for errors, then check that all 7 tables exist under `RaceDay > Tables` and have data in them.
+EventEnrollment links a Participant, an Event, and a Category together whenever someone enters an event. Results are linked to an enrolment rather than straight to a participant, so a result can never be confused with the wrong race if someone enters more than one event.
 
-## API Endpoint Plan
+Full reasoning for these decisions is written up in RaceDay_Part1_Planning_and_Design.docx in /docs.
 
-The full endpoint plan is in `docs/RaceDay_API_Endpoint_Plan.md`, covering Authentication, User Profile, Events, Categories, Event Enrolments, and Results, plus one extra endpoint I identified for fetching live weather for an event. Every endpoint lists its HTTP method, route, description, required role, request body, and expected response, including failure cases.
+## How to run my SQL script
+
+1. Open SQL Server Management Studio and connect to your instance.
+2. Open docs/RaceDay_Database.sql.
+3. Select the entire script and run it.
+4. It creates the database, drops and recreates all tables, and seeds sample data: 2 Organisers, 2 Participants, 3 Events, categories for each event, and sample enrolments and results.
+5. Check the Messages tab for errors, then confirm all 7 tables appear with data.
+
+## API endpoint plan
+
+The full endpoint plan, covering Authentication, User Profile, Events, Categories, Event Enrolments, Results, and an additional Weather endpoint I identified, is in docs/RaceDay_API_Endpoint_Plan.md. Every endpoint lists its HTTP method, route, description, required role, request body, and expected response including failure cases.
+
